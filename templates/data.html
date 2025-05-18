@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>사용자 데이터</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
+        textarea { width: 100%; height: 300px; font-family: monospace; font-size: 14px; }
+        form { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>사용자 데이터</h1>
+
+    <!-- 사용자 정보 출력 -->
+    <textarea readonly>{{ user_data }}</textarea>
+
+    <!-- 사용자 이름 수정 -->
+    <form method="POST" action="/edit_name">
+        현재 이름: <input type="text" name="current_name" required>
+        → 수정 이름: <input type="text" name="new_name" required>
+        <button type="submit">수정</button>
+    </form>
+
+    <!-- 전체 데이터 초기화 -->
+    <form method="POST" action="/reset_data" onsubmit="return confirm('정말 모든 데이터를 초기화할까요?');">
+        <button type="submit" style="margin-top:10px;color:red;">모든 데이터 초기화</button>
+    </form>
+
+    <!-- 홈, 지도 링크 -->
+    <p>
+        <a href="/">[홈으로]</a> |
+        <a href="/map">[지도 보기]</a>
+    </p>
+</body>
+</html>
