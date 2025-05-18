@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>경로 예측 지도</title>
+    <style>
+        body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
+        input { padding: 8px; margin: 5px; width: 45%; }
+        button { padding: 10px 20px; margin-top: 10px; font-size: 16px; }
+        #map { width: 100%; height: 400px; margin-top: 20px; }
+    </style>
+    <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=702531c2283a267c0f3d762a745ff1ee&autoload=true&libraries=services,geometry"></script>
+</head>
+<body>
+    <div style="margin-bottom: 20px;">
+        <form action="/" method="get" style="display:inline;"><button>홈</button></form>
+        <form action="/data" method="get" style="display:inline;"><button>데이터 보기</button></form>
+    </div>
+    <h1>출발지와 목적지를 입력하세요</h1>
+    <form id="routeForm">
+        <input type="text" id="start" placeholder="출발지 (예: 서울역)" required>
+        <input type="text" id="end" placeholder="도착지 (예: 경복궁)" required><br>
+        <input type="text" id="user_name" placeholder="사용자 이름" required><br>
+        <button type="submit">경로 예측</button>
+    </form>
+    <div id="map"></div>
+
+<script>
+const mapContainer = document.getElementById('map');
+const map = new kakao.maps.Map(mapContainer, {
+    center: new kakao.maps.LatLng(37.5665, 126.9780),  // 서울 중심
+    level: 5
+});
+const places = new kakao.maps.services.Places();
+let markers = [];
+
+document.getElementById('routeForm').onsubmit = function(e) {
+    e.preventDefault();
+
+    const start = document.getElementById("start").value.trim();
+    const end = document.getElementById("end").value.trim();
+    const user_name = document.getElementById("user_name").value.trim();
+    if (!start || !end || !user_name) {
+        alert("모든 필드를 입력해주세요.");
+        return;
+    }
+
+    places.keywordSearch(start, function(startResult, status1) {
+        if (status1 !== kakao.maps.services.Status.OK || !startResult.length) {
+            alert("출발지를 찾을 수 없습니다.");
+            return;
+        }
+
+        places.keywordSearch(end, function(endResult, status2) {
+            if (status2 !== kakao.maps.services.Status.OK || !endResult.length) {
+                alert("도착지를 찾을 수 없습니다.");
+                return;
+            }
+
+            const startCoords = new kakao.maps.LatLng(startResult[0].y, startResult[0].x);
+            const endCoords = new kakao.maps.LatLng(endResult[0].y, endResult[0].x);
+            const distance = kakao.maps.geometry.spherical.computeDistance(startCoords, endCoords); // 미터
+
+            // 마커 초기화
+            markers.forEach(m => m.setMap(null));
+            markers = [];
+
+            // 마커 추가
+            const startMarker = new kakao.maps.Marker({ map, position: startCoords });
+            const endMarker = new kakao.maps.Marker({ map, position: endCoords });
+            markers.push(startMarker, endMarker);
+
+            // 지도 중심 이동
+            map.setBounds(new kakao.maps.LatLngBounds(startCoords, endCoords));
+
+            // 선 그리기
+            const linePath = [startCoords, endCoords];
+            const polyline = new kakao.maps.Polyline({
+                path: linePath,
+                strokeWeight: 4,
+                strokeColor: '#00A0E9',
+                strokeOpacity: 0.7,
+                strokeStyle: 'solid'
+            });
+            polyline.setMap(map);
+
+            // 사용자 속도 가져오기
+            fetch(`/api/get_speed?user_name=${encodeURIComponent(user_name)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.speed) {
+                        alert("사용자 속도가 설정되어 있지 않습니다.");
+                        return;
+                    }
+                    const speed = data.speed; // m/s
+                    const estimated = distance / speed;
+                    const minutes = Math.round(estimated / 60);
+                    const km = (distance / 1000).toFixed(2);
+
+                    alert(`총 거리: ${km}km\n예상 소요 시간: 약 ${minutes}분`);
+                });
+        });
+    });
+};
+</script>
+</body>
+</html>
