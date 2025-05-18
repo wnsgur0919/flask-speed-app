@@ -4,10 +4,27 @@
     <meta charset="utf-8">
     <title>경로 예측 지도</title>
     <style>
-        body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
-        input { padding: 8px; margin: 5px; width: 45%; }
-        button { padding: 10px 20px; margin-top: 10px; font-size: 16px; }
-        #map { width: 100%; height: 400px; margin-top: 20px; }
+        body {
+            font-family: Arial;
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            width: 45%;
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #map {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
     </style>
     <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=702531c2283a267c0f3d762a745ff1ee&autoload=true&libraries=services,geometry"></script>
 </head>
@@ -16,6 +33,7 @@
         <form action="/" method="get" style="display:inline;"><button>홈</button></form>
         <form action="/data" method="get" style="display:inline;"><button>데이터 보기</button></form>
     </div>
+
     <h1>출발지와 목적지를 입력하세요</h1>
     <form id="routeForm">
         <input type="text" id="start" placeholder="출발지 (예: 서울역)" required>
@@ -23,7 +41,9 @@
         <input type="text" id="user_name" placeholder="사용자 이름" required><br>
         <button type="submit">경로 예측</button>
     </form>
+
     <div id="map"></div>
+
 <script>
 const mapContainer = document.getElementById('map');
 const map = new kakao.maps.Map(mapContainer, {
@@ -60,6 +80,7 @@ document.getElementById('routeForm').onsubmit = function(e) {
             const endCoords = new kakao.maps.LatLng(endResult[0].y, endResult[0].x);
             const distance = kakao.maps.geometry.spherical.computeDistance(startCoords, endCoords);
 
+            // 마커 초기화
             markers.forEach(m => m.setMap(null));
             markers = [];
 
@@ -67,20 +88,20 @@ document.getElementById('routeForm').onsubmit = function(e) {
             const endMarker = new kakao.maps.Marker({ map, position: endCoords });
             markers.push(startMarker, endMarker);
 
-            const bounds = new kakao.maps.LatLngBounds();
-            bounds.extend(startCoords);
-            bounds.extend(endCoords);
-            map.setBounds(bounds);
+            // 지도 범위 자동 설정
+            map.setBounds(new kakao.maps.LatLngBounds(startCoords, endCoords));
 
-            const line = new kakao.maps.Polyline({
+            // 선 그리기
+            const polyline = new kakao.maps.Polyline({
                 path: [startCoords, endCoords],
                 strokeWeight: 4,
-                strokeColor: "#00A0E9",
+                strokeColor: '#00A0E9',
                 strokeOpacity: 0.7,
-                strokeStyle: "solid"
+                strokeStyle: 'solid'
             });
-            line.setMap(map);
+            polyline.setMap(map);
 
+            // 속도 요청
             fetch(`/api/get_speed?user_name=${encodeURIComponent(user_name)}`)
                 .then(res => res.json())
                 .then(data => {
@@ -88,11 +109,13 @@ document.getElementById('routeForm').onsubmit = function(e) {
                         alert("사용자 속도가 설정되어 있지 않습니다.");
                         return;
                     }
+
                     const speed = data.speed;
-                    const estimated = distance / speed;
-                    const minutes = Math.round(estimated / 60);
+                    const timeSec = distance / speed;
+                    const timeMin = Math.round(timeSec / 60);
                     const km = (distance / 1000).toFixed(2);
-                    alert(`총 거리: ${km}km\n예상 소요 시간: 약 ${minutes}분`);
+
+                    alert(`총 거리: ${km}km\n예상 소요 시간: 약 ${timeMin}분`);
                 });
         });
     });
