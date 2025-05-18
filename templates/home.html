@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>사용자 설정</title>
+    <style>
+        body { font-family: Arial; text-align: center; margin: 50px auto; max-width: 600px; }
+        input, button { padding: 10px; margin: 10px; font-size: 16px; width: 80%; }
+    </style>
+</head>
+<body>
+    <h1>사용자 이름과 평균 속도 설정</h1>
+    <form method="POST" action="/set_speed">
+        사용자 이름: <input type="text" name="user_name" required><br>
+        <button type="submit" name="speed_type" value="slow">느림 (4km/h)</button>
+        <button type="submit" name="speed_type" value="normal">보통 (5km/h)</button>
+        <button type="submit" name="speed_type" value="fast">빠름 (6km/h)</button>
+    </form>
+    {% if message %}
+    <p style="color:green;"><strong>{{ message }}</strong></p>
+    {% endif %}
+    <p>
+        <a href="/map">[지도 보기]</a> |
+        <a href="/data">[데이터 보기]</a>
+    </p>
+</body>
+</html>
