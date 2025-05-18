@@ -215,3 +215,32 @@ if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+
+@app.route('/receive_time', methods=['POST'])
+def receive_time():
+    try:
+        data = request.get_json()
+        user = data.get("user")
+        walk_time = data.get("walk_time")  # 초 단위 예상 도보 시간
+
+        if not user or not walk_time:
+            return jsonify({"status": "fail", "reason": "Invalid data"}), 400
+
+        db = load_user_data()
+        if user not in db:
+            db[user] = {
+                "average_speed": 1.4,
+                "history": []
+            }
+
+        db[user]["history"].append({
+            "walk_time": walk_time,
+            "source": "external"
+        })
+
+        save_user_data(db)
+        return jsonify({"status": "success", "message": f"{user}님의 도보 시간 저장 완료"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
