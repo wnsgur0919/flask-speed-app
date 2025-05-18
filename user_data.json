@@ -1,7 +1,1 @@
-import requests
-
-res = requests.post("https://flask-speed-app.onrender.com/receive_time", json={
-    "user": "홍길동",
-    "walk_time": 720
-})
-print(res.json())
+{}
